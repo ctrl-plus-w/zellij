@@ -1,0 +1,44 @@
+layout {
+    default_tab_template {
+
+        children
+
+        pane size=1 borderless=true {
+
+            // v0.21.0 
+            // compile from source using `cargo build --release` 
+            plugin location="file:~/.config/zellij/plugins/zjstatus.wasm" {
+                format_left  "#[fg=#a8a8a8,bg=#262626]{mode}#[fg=#afd787,bg=#262626] │ {session} │ {tabs}"
+                format_right "#[fg=#a8a8a8,bg=#262626]{datetime}"
+                format_space "#[bg=#262626]"
+
+                mode_normal        "#[fg=#afd787,bg=#262626,bold] {name} "
+                mode_locked        "#[fg=#afd787,bg=#262626]  "
+                mode_resize        "#[fg=#afd787,bg=#262626] 󰩨 "
+                mode_pane          "#[fg=#afd787,bg=#262626]  "
+                mode_tab           "#[fg=#afd787,bg=#262626]  "
+                mode_scroll        "#[fg=#afd787,bg=#262626]  "
+                mode_enter_search  "#[fg=#afd787,bg=#262626]  "
+                mode_search        "#[fg=#afd787,bg=#262626] 󱕒 "
+                mode_rename_tab    "#[fg=#afd787,bg=#262626]  "
+                mode_rename_pane   "#[fg=#afd787,bg=#262626]  "
+                mode_session       "#[fg=#afd787,bg=#262626] 󰛸 "
+                mode_move          "#[fg=#afd787,bg=#262626] 󰆾 "
+                mode_prompt        "#[fg=#afd787,bg=#262626] {name} "
+                mode_tmux          "#[fg=#afd787,bg=#262626] {name} "
+
+                tab_normal   "#[fg=#808080,bg=#262626]{index}:{name}  "
+                tab_active   "#[fg=#afd787,bg=#262626]{index}:{name}  "
+
+                datetime          " {format} "
+                datetime_format   "%H:%M %d-%b-%y"
+                datetime_timezone "Europe/Paris"
+            }
+        }
+    }
+
+    tab focus=true {
+      pane name="shell"
+    }
+}
+

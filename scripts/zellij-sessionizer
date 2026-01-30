@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+
+CONFIG_FILE_NAME="zellij-sessionizer.conf"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/zellij"
+CONFIG_FILE="$CONFIG_DIR/$CONFIG_FILE_NAME"
+PANE_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zellij-sessionizer"
+PANE_CACHE_FILE="$PANE_CACHE_DIR/panes.cache"
+
+if [[ -f "$CONFIG_FILE" ]]; then
+  source "$CONFIG_FILE"
+fi
+
+if [[ -f "$CONFIG_FILE_NAME" ]]; then
+  source "$CONFIG_FILE_NAME"
+fi
+
+if [[ $TS_LOG != "true" ]]; then
+  if [[ -z $TS_LOG_FILE ]]; then
+    TS_LOG_FILE="$HOME/.local/share/zellij-sessionizer/zellij-sessionizer.logs"
+  fi
+
+  mkdir -p "$(dirname "$TS_LOG_FILE")"
+fi
+
+log() {
+  if [[ -z $TS_LOG ]]; then
+    return
+  elif [[ $TS_LOG == "echo" ]]; then
+    echo "$*"
+  elif [[ $TS_LOG == "file" ]]; then
+    echo "$*" >>"$TS_LOG_FILE"
+  fi
+}
+
+sanity_check() {
+  if ! command -v zellij &>/dev/null; then
+    echo "zellij is not installed. Please install it first."
+    exit 1
+  fi
+
+  if ! command -v fzf &>/dev/null; then
+    echo "fzf is not installed. Please install it first."
+    exit 1
+  fi
+
+  if ! command -v zoxide &>/dev/null; then
+    echo "zoxide is not installed. Please install it first."
+    exit 1
+  fi
+}
+
+sanity_check
+
+session=""
+kill_session=""
+action="switch"
+VERSION="0.1.0"
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+  -h | --help)
+    echo "Usage: zellij-sessionizer [OPTIONS]"
+    echo "Options:"
+    echo "  -h, --help             Display this help message"
+    echo "  -s, --session <name>   Session to attach to."
+    echo "  -k, --kill             Choose a zellij session to kill via fzf."
+    echo "  -kc, --kill-current    Kill the current zellij session."
+    exit 0
+    ;;
+  -s | --session)
+    session="$2"
+    action="switch"
+    if [[ -z $session ]]; then
+      echo "Session cannot be empty"
+      exit 1
+    fi
+    shift
+    ;;
+  -kc | --kill-current)
+    action="kill"
+    kill_session="$ZELLIJ_SESSION_NAME"
+    shift
+    ;;
+  -k | --kill)
+    action="kill"
+    kill_session="$(zellij list-sessions -n 2>/dev/null | grep -v EXITED | cut -d ' ' -f 1 | fzf)"
+    shift
+    ;;
+  -v | --version)
+    echo "tmux-sessionizer version $VERSION"
+    exit 0
+    ;;
+  esac
+  shift
+done
+
+log "zellij-sessionizer($VERSION): session=$session log=$TS_LOG log_file=$TS_LOG_FILE"
+
+# utility function to find directories
+find_dirs() {
+  # list zellij alive sessions
+  zellij list-sessions -n 2>/dev/null | grep -v EXITED | awk '{print " " $1}'
+
+  # list zellij dead sessions
+  zellij list-sessions -n 2>/dev/null | grep EXITED | awk '{print " " $1}'
+
+  # zoxide
+  zoxide query -l 2>/dev/null | awk '{print " " $1}'
+
+  # note: TS_SEARCH_PATHS is an array of paths to search for directories
+  # if the path ends with :number, it will search for directories with a max depth of number ;)
+  # if there is no number, it will search for directories with a max depth defined by TS_MAX_DEPTH or 1 if not set
+  for entry in "${TS_SEARCH_PATHS[@]}"; do
+    # Check if entry as :number as suffix then adapt the maxdepth parameter
+    if [[ "$entry" =~ ^([^:]+):([0-9]+)$ ]]; then
+      path="${BASH_REMATCH[1]}"
+      depth="${BASH_REMATCH[2]}"
+    else
+      path="$entry"
+    fi
+
+    [[ -d "$path" ]] && find "$path" -mindepth 1 -maxdepth "${depth:-${TS_MAX_DEPTH:-1}}" -path '*/.git' -prune -o -type d -print | awk '{print " " $0}'
+  done
+}
+
+list_sessions() {
+  zellij list-sessions -n -s
+}
+
+switch_session() {
+  if [[ -n "$ZELLIJ_SESSION_NAME" ]]; then
+    echo "Cannot switch session from within zellij."
+    exit 1
+  fi
+
+  # if TS_SEARCH_PATHS is not set use default
+  [[ -n "$TS_SEARCH_PATHS" ]] || TS_SEARCH_PATHS=(~/dev ~/.config)
+
+  while true; do
+    layout="default"
+
+    # select a session
+    if [[ -z "$session" ]]; then
+      selected=$(find_dirs | fzf)
+
+      # quit if nothing was selected
+      [[ -z "$selected" ]] && exit 0
+
+      selected="${selected:2}"
+
+      # check if this is a path
+      if [[ -d "$selected" ]]; then
+        path="$selected"
+        session=$(basename "$path")
+
+        cd "$path" || continue
+
+        # determine layout based on path
+        if [[ "$path" == *"/dev/"* ]]; then
+          layout="dev"
+        fi
+      else
+        session="$selected"
+      fi
+    fi
+
+    # the session exists attach to it
+    if list_sessions | grep -qFx "$session"; then
+      # create and attach to the session
+      zellij attach "$session"
+    else
+      # session doesn't exist, create with default layout
+      zellij -s "$session" -n "$layout"
+    fi
+
+    # the user detaches from the session
+    # we clear the session and allow him to reconnect to another one
+    session=""
+  done
+}
+
+kill_session() {
+  if [[ -z "$kill_session" ]]; then
+    echo "No session to kill was selected."
+    exit 1
+  fi
+
+  zellij kill-session "$kill_session"
+}
+
+case "$action" in
+"switch")
+  switch_session
+  ;;
+"kill")
+  kill_session
+  ;;
+esac

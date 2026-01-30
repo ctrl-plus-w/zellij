@@ -1,0 +1,190 @@
+theme "monokai_suka"
+
+default_shell "zsh"
+
+keybinds clear-defaults=true {
+
+    locked {
+        bind "Alt Space" { SwitchToMode "normal"; }
+
+        // 
+        // sessions
+        //
+
+        // zellij-sessionizer
+        bind "Alt s" { Detach; }
+
+        // session manager
+        bind "Alt Shift s" {
+            LaunchOrFocusPlugin "session-manager" {
+                floating true
+                move_to_focused_tab true
+            }
+        }
+
+        // quit
+        bind "Alt Shift d" { Quit; }
+
+        // detach
+        bind "Alt d" { Detach; }
+
+        //
+        // tabs (windows)
+        //
+
+        // movement
+        bind "Alt &" { GoToTab 1; }
+        bind "Alt é" { GoToTab 2; }
+        bind "Alt \"" { GoToTab 3; }
+        bind "Alt '" { GoToTab 4; }
+        bind "Alt (" { GoToTab 5; }
+        bind "Alt §" { GoToTab 6; }
+        bind "Alt è" { GoToTab 7; }
+        bind "Alt !" { GoToTab 8; }
+        bind "Alt ç" { GoToTab 9; }
+
+        bind "Alt Tab" { GoToNextTab; }
+        bind "Alt Shift Tab" { GoToPreviousTab; }
+
+        // management
+        bind "Alt t" { NewTab; }
+        bind "Alt Shift q" { CloseTab; }
+        bind "Alt Shift r" { SwitchToMode "RenameTab"; TabNameInput 0; }
+
+        //
+        // panes
+        //
+
+        // create
+        bind "Alt Shift t" { NewPane "stacked"; }
+        bind "Alt w" { NewPane "right"; }
+        bind "Alt Shift w " { NewPane "down"; }
+
+        // management
+        bind "Alt g" { ToggleFloatingPanes; }
+        bind "Alt f" { ToggleFocusFullscreen; }
+        bind "Alt q" { CloseFocus; }
+
+        // resize panes
+        bind "Alt r" { SwitchToMode "resize"; }
+
+        //
+        // misc
+        //
+        bind "Alt c" { SwitchToMode "search"; } 
+    }
+
+    resize {
+        // resize using vim motions
+        bind "h" { Resize "Increase left"; }
+        bind "j" { Resize "Increase down"; }
+        bind "k" { Resize "Increase up"; }
+        bind "l" { Resize "Increase right"; }
+    }
+
+    // search mode
+    search {
+        bind "n" { Search "down"; }
+        bind "Shift N" { Search "up"; }
+
+        bind "e" { EditScrollback; SearchInput 0; }
+        bind "/" { SwitchToMode "EnterSearch"; SearchInput 0; }
+
+        // scroll (half) page down
+        // with the same shortcuts from my nvim config 
+        bind "Ctrl u" { HalfPageScrollUp; }
+        bind "Ctrl U" { PageScrollUp; }
+
+        bind "Ctrl d" { HalfPageScrollDown; }
+        bind "Ctrl D" { PageScrollDown; }
+
+        bind "j" { ScrollDown; }
+        bind "k" { ScrollUp; }
+    }
+
+    // search input mode
+    entersearch {
+        bind "esc" { SwitchToMode "scroll"; }
+        bind "enter" { SwitchToMode "search"; }
+    }
+
+    renametab {
+        bind "esc" { UndoRenameTab; SwitchToMode "locked"; }
+    }
+
+    renamepane {
+        bind "esc" { UndoRenamePane; SwitchToMode "locked"; }
+    }
+    
+    //
+    // shared bindings
+    //
+
+    shared_except "locked" {
+        bind "esc" { SwitchToMode "locked"; }
+    }
+
+    shared_among "renamepane" "renametab" {
+      bind "enter" { SwitchToMode "locked"; }
+    }
+
+    shared_among "resize" "locked" {
+        // movement
+        bind "Alt h" { MoveFocus "left"; }
+        bind "Alt j" { MoveFocus "down"; }
+        bind "Alt k" { MoveFocus "up"; }
+        bind "Alt l" { MoveFocus "right"; }
+
+        // swap panes
+        bind "Alt Shift h" { MovePane "left"; }
+        bind "Alt Shift j" { MovePane "down"; }
+        bind "Alt Shift k" { MovePane "up"; }
+        bind "Alt Shift l" { MovePane "right"; }
+    }
+}
+
+// Plugin aliases - can be used to change the implementation of Zellij
+// changing these requires a restart to take effect
+plugins {
+    about location="zellij:about"
+
+    compact-bar location="zellij:compact-bar"
+
+    configuration location="zellij:configuration"
+
+    filepicker location="zellij:strider" {
+        cwd "/"
+    }
+
+    plugin-manager location="zellij:plugin-manager"
+
+    session-manager location="zellij:session-manager"
+
+    status-bar location="zellij:status-bar"
+
+    strider location="zellij:strider"
+
+    tab-bar location="zellij:tab-bar"
+
+    welcome-screen location="zellij:session-manager" {
+        welcome_screen true
+    }
+}
+
+//
+// some options
+//
+
+default_mode "locked"
+copy_on_select true
+
+scroll_buffer_size 100000
+session_name "main" 
+attach_to_session true 
+show_startup_tips false 
+show_release_notes false
+pane_frames false
+
+load_plugins {
+
+}
