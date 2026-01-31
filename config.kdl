@@ -128,19 +128,19 @@ keybinds clear-defaults=true {
       bind "enter" { SwitchToMode "locked"; }
     }
 
-    shared_among "resize" "locked" {
-        // movement
-        bind "Alt h" { MoveFocus "left"; }
-        bind "Alt j" { MoveFocus "down"; }
-        bind "Alt k" { MoveFocus "up"; }
-        bind "Alt l" { MoveFocus "right"; }
-
-        // swap panes
-        bind "Alt Shift h" { MovePane "left"; }
-        bind "Alt Shift j" { MovePane "down"; }
-        bind "Alt Shift k" { MovePane "up"; }
-        bind "Alt Shift l" { MovePane "right"; }
-    }
+    // shared_among "resize" "locked" {
+    //     // movement
+    //     bind "Alt h" { MoveFocus "left"; }
+    //     bind "Alt j" { MoveFocus "down"; }
+    //     bind "Alt k" { MoveFocus "up"; }
+    //     bind "Alt l" { MoveFocus "right"; }
+    //
+    //     // swap panes
+    //     bind "Alt Shift h" { MovePane "left"; }
+    //     bind "Alt Shift j" { MovePane "down"; }
+    //     bind "Alt Shift k" { MovePane "up"; }
+    //     bind "Alt Shift l" { MovePane "right"; }
+    // }
 }
 
 // Plugin aliases - can be used to change the implementation of Zellij
